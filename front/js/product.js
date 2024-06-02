@@ -7,7 +7,10 @@ async function main() {
      * Fonction principale de index.html - 
      * mis en fonction pour pouvoir être en async sur lireProduits()
      */
- /**    clearLocalStorage () */
+ /**    clearLocalStorage () 
+ localStorage.clear()
+ */
+
     /**recuperation product ID  */
 
     const url = new URL(window.location.href);
@@ -121,6 +124,3 @@ function logLocalStorage () {
     }
 }
 
-function clearLocalStorage () {
-    localStorage.clear()
-}
