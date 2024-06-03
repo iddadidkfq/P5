@@ -82,30 +82,24 @@ async   function afficherArticle (id,color,quantity) {
         let id=article.getAttribute("data-id")       
         let color=article.getAttribute("data-color")
         modifQuantite (id, color, quantity)
-
     })
 
 
-/**création du div delete */
+    /**création du div delete */
     const divDelete = document.createElement("div")
     divDelete.classList.add("cart__item__content__settings__delete")
     divDelete.innerHTML = "<p class=\"deleteItem\">Supprimer</p>"
     divSettings.appendChild(divDelete)
 
-  /**ajout d'évènement clic supprimer */
+    /**ajout d'évènement clic supprimer */
 
-  divDelete.addEventListener("click", function () {
-    let article = divDelete.closest(".cart__item")
-    let id=article.getAttribute("data-id")       
-    let color=article.getAttribute("data-color")
-    deleteArticle (id, color)
-    window.localStorage.removeItem(article)
-
-
-})
-
-
-
+    divDelete.addEventListener("click", function () {
+        let article = divDelete.closest(".cart__item")
+        let id=article.getAttribute("data-id")       
+        let color=article.getAttribute("data-color")
+        deleteArticle (id, color)
+        article.remove()
+    })
 }
 
 /**calcul prix ttl */
@@ -147,6 +141,49 @@ async function afficherPrixTotal () {
 
 }
 
+/**formulaire */
+
+/**recuperer balises de champs */
+
+let balFirstName = document.getElementById ("firstName")
+balFirstName.addEventListener("change", function () {
+let firstName = balFirstName.value
+console.log (firstName)
+
+/**regex saisie */
+let regex = new RegExp ("^([a-zA-Z '-]+)$")
+let firstNameErrorMsg = document.getElementById ("firstNameErrorMsg")
+if (regex.test (firstName)===false) {
+    firstNameErrorMsg.innerHTML = "Caractère non valide"
+} else {
+    firstNameErrorMsg.innerHTML = ""
+}
+
+})
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /**fonction modif quantité */
 function modifQuantite (id, color, quantity) {
 
@@ -162,10 +199,10 @@ function modifQuantite (id, color, quantity) {
 /**fonction delete article */
 function deleteArticle (id, color) {
     window.localStorage.removeItem(id + "-" + color)
+    /** maj total */
+    afficherPrixTotal ()
+
 }
-
-
-
 
 async function lireProduit(id) {
 
