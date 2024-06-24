@@ -1,8 +1,14 @@
-afficherCart ()
+
+
+const arrayProducts = afficherCart ()
 
 /**création funct afficher cart qui crawl le local storage*/
 
 function afficherCart () {
+    /** création tableau produits */
+
+    const tableauProduits = []
+
     for (var i = 0; i < localStorage.length; i++){
         key=localStorage.key(i)
 
@@ -11,14 +17,25 @@ function afficherCart () {
         let id= myArray[0]
         let color= myArray [1]
         let quantity= localStorage.getItem(key)
-        
+        const tableauProduit = []
+        tableauProduit["id"]= id
+        tableauProduit["color"]= color
+        tableauProduit["quantity"]= quantity
+        tableauProduits [i] = tableauProduit
+        console.log (tableauProduit)
         
         afficherArticle (id,color,quantity)
     
     }
 
+    console.log (tableauProduits)
+
 /** affichage du prix total */
     afficherPrixTotal () 
+
+
+/** récupération de la valeur tableauProduits*/
+    return (tableauProduits)
 }
 
 async   function afficherArticle (id,color,quantity) {
@@ -37,7 +54,7 @@ async   function afficherArticle (id,color,quantity) {
 /**création du div pour img */  
     const divImg = document.createElement("div")
     divImg.classList.add("cart__item__img")
-    divImg.innerHTML = "<img src=\"" + produit.imageUrl +"\" alt=\"" + produit.altTxt+"\">"
+    divImg.innerHTML = `<img src="` + produit.imageUrl +`" alt="` + produit.altTxt+ `">`
 
     article.appendChild(divImg)
 
@@ -49,7 +66,7 @@ async   function afficherArticle (id,color,quantity) {
 /**création du div description (name + color + prix) */
     const divDescription = document.createElement("div")
     divDescription.classList.add("cart__item__content__description")
-    divDescription.innerHTML = "<h2>" + produit.name + "</h2>" + "<p>" + color + "</p>" + "<p>" + produit.price + " €</p>"
+    divDescription.innerHTML = `<h2>` + produit.name + `</h2>` + `<p>` + color + `</p>` + `<p>` + produit.price + ` €</p>`
     divContent.appendChild(divDescription)
 
 /**création du div settings */
@@ -60,7 +77,7 @@ async   function afficherArticle (id,color,quantity) {
 /**création du div quantity */
     const divQuantity = document.createElement("div")
     divQuantity.classList.add("cart__item__content__settings__quantity")
-    divQuantity.innerHTML = "<p>Qté : </p>"
+    divQuantity.innerHTML = `<p>Qté : </p>`
     divSettings.appendChild(divQuantity)
 
 /**création du input quantity */
@@ -88,7 +105,7 @@ async   function afficherArticle (id,color,quantity) {
     /**création du div delete */
     const divDelete = document.createElement("div")
     divDelete.classList.add("cart__item__content__settings__delete")
-    divDelete.innerHTML = "<p class=\"deleteItem\">Supprimer</p>"
+    divDelete.innerHTML = `<p class="deleteItem">Supprimer</p>`
     divSettings.appendChild(divDelete)
 
     /**ajout d'évènement clic supprimer */
@@ -141,25 +158,105 @@ async function afficherPrixTotal () {
 
 }
 
-/**formulaire */
+/**formulaire*/
+
+let contact = {}
+
 
 /**recuperer balises de champs */
 
-let balFirstName = document.getElementById ("firstName")
-balFirstName.addEventListener("change", function () {
-let firstName = balFirstName.value
-console.log (firstName)
+/**balise first name */
+let firstName = document.getElementById ("firstName")
+firstName.addEventListener("change", function () {
+    contact.firstName = firstName.value
+    console.log (contact.firstName)
 
-/**regex saisie */
-let regex = new RegExp ("^([a-zA-Z '-]+)$")
-let firstNameErrorMsg = document.getElementById ("firstNameErrorMsg")
-if (regex.test (firstName)===false) {
-    firstNameErrorMsg.innerHTML = "Caractère non valide"
-} else {
-    firstNameErrorMsg.innerHTML = ""
-}
+    /**regex saisie first name */
+    let regex = new RegExp ("^([a-zA-Z '-]+)$")
+    let firstNameErrorMsg = document.getElementById ("firstNameErrorMsg")
+    if (regex.test (contact.firstName)===false) {
+        firstNameErrorMsg.innerHTML = "Caractère non valide"
+    } else {
+        firstNameErrorMsg.innerHTML = ""
+    }
 
 })
+
+/**balise last name */
+let lastName = document.getElementById ("lastName")
+lastName.addEventListener("change", function () {
+    contact.lastName = lastName.value
+    console.log (contact.lastName)
+
+    /**regex saisie last name */
+    let regex = new RegExp ("^([a-zA-Z '-]+)$")
+    let lastNameErrorMsg = document.getElementById ("lastNameErrorMsg")
+    if (regex.test (contact.lastName)===false) {
+        lastNameErrorMsg.innerHTML = "Caractère non valide"
+    } else {
+        lastNameErrorMsg.innerHTML = ""
+    }
+
+})
+
+/**balise adresse */
+let address = document.getElementById ("address")
+address.addEventListener("change", function () {
+    contact.address = address.value
+    console.log (contact.address)
+
+    /**regex saisie adresse */
+    let regex = new RegExp ("^([0-9a-zA-Z '-]+)$")
+    let addressErrorMsg = document.getElementById ("addressErrorMsg")
+    if (regex.test (contact.address)===false) {
+        addressErrorMsg.innerHTML = "Adresse non valide"
+    } else {
+        addressErrorMsg.innerHTML = ""
+    }
+
+})
+
+/**balise city */
+let city = document.getElementById ("city")
+city.addEventListener("change", function () {
+    contact.city = city.value
+    console.log (contact.city)
+
+    /**regex saisie city */
+    let regex = new RegExp ("^([a-zA-Z '-]+)$")
+    let cityErrorMsg = document.getElementById ("cityErrorMsg")
+    if (regex.test (contact.city)===false) {
+        cityErrorMsg.innerHTML = "Caractère non valide"
+    } else {
+        cityErrorMsg.innerHTML = ""
+    }
+
+})
+/**balise email */
+let email = document.getElementById ("email")
+email.addEventListener("change", function () {
+    contact.email = email.value
+    console.log (contact.email)
+
+    /**regex saisie email ^[\w\.=-]+@[\w\.-]+\.[\w]{2,3}$  */
+    let regex = new RegExp ("[a-z0-9._-]+@[a-z0-9._-]+\.[a-z0-9._-]+")
+    let emailErrorMsg = document.getElementById ("emailErrorMsg")
+    if (regex.test (contact.email)===false) {
+        emailErrorMsg.innerHTML = "Adresse non valide"
+        console.log ("erreur")
+    } else {
+        emailErrorMsg.innerHTML = ""
+        console.log ("ok")
+    }
+
+})
+
+/**bouton commander */
+
+
+
+console.log ("bouton")
+console.log (arrayProducts)
 
 
 
@@ -216,3 +313,4 @@ async function lireProduit(id) {
     return(produit)
    
 }
+
