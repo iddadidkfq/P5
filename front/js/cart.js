@@ -18,7 +18,12 @@
     firstName.addEventListener("change", function () {
         contact.firstName = firstName.value
 
-        /**regex saisie first name */
+        /**regex saisie first name 
+         * ^([a-zA-Z '-]+) = doit commencer (^) par 
+         *      un groupe (lettre MAJ ou MIN ou espace ou apostrophe ou tiret), 
+         *      présent au moins une fois (+) 
+         * $ = le groupe ci-dessus doit aussi se terminer par la même séquence
+        */
         let regex = new RegExp ("^([a-zA-Z '-]+)$")
         let firstNameErrorMsg = document.getElementById ("firstNameErrorMsg")
         if (regex.test (contact.firstName)===false) {
@@ -77,7 +82,14 @@
     email.addEventListener("change", function () {
         contact.email = email.value
 
-        /**regex saisie email */
+        /**regex saisie email 
+         * [a-z0-9._-]+ = [groupe de chiffre ou lettre ou . ou - ou _] répété au moins 1 fois
+         * @ = il faut un @
+         * [a-z0-9._-]+ = [groupe de chiffre ou lettre ou . ou - ou _] répété au moins 1 fois
+         * \. = il faut un point (caractère d'évitement \ car sinon le point représente 
+         * n'importe quel caractère)
+         * [a-z0-9._-]+ = [groupe de chiffre ou lettre ou . ou - ou _] répété au moins 1 fois
+        */
         let regex = new RegExp ("[a-z0-9._-]+@[a-z0-9._-]+\.[a-z0-9._-]+")
         let emailErrorMsg = document.getElementById ("emailErrorMsg")
         if (regex.test (contact.email)===false) {
@@ -94,16 +106,18 @@
     let form = document.querySelector (".cart__order__form")
 
     /** détection event submit sur formulaire (et non sur le bouton) */
-    form.addEventListener ("submit", (event) => {
+    form.addEventListener ("submit", async(event) => {
  
         /**blocage de l'envoi du formulaire en HTML*/
         event.preventDefault ()
 
         /**on appelle l'API*/
-        const reponse = envoyerPost (contact, arrayProducts)
-            
-    }
-)
+        let orderId = await envoyerPost (contact, arrayProducts) 
+        console.log (orderId)
+        /**lancement de la page confirmation de commande */
+        window.location.href = 'confirmation.html?orderid=' + orderId
+
+    })
 
 function afficherCart () {
 /** affiche les divers articles du CART à partir du local storage
@@ -135,7 +149,7 @@ function afficherCart () {
     console.log (tableauProduit)
 
     /** récupération de la valeur tableauProduits*/
-    return (tableauProduit)
+    return tableauProduit
 }
 
 async function afficherArticle (id,color,quantity) {
@@ -201,6 +215,8 @@ async function afficherArticle (id,color,quantity) {
         let color=article.getAttribute("data-color")
         /**  maj du local storage */
         modifQuantiteLS (id, color, quantity) 
+        /** pour vérification */
+        logLocalStorage ()
         /** maj total */
         afficherPrixTotal ()
     })
@@ -220,6 +236,8 @@ async function afficherArticle (id,color,quantity) {
         deleteArticleLS (id, color)
         /** suppression de toute la balise article dans le DOM */
         article.remove()
+        /** pour vérification */
+        logLocalStorage ()
         /** maj total */
         afficherPrixTotal ()
     })
@@ -253,15 +271,13 @@ async function afficherPrixTotal () {
     /**affichage prix total */ 
     let totalPrice = document.getElementById ("totalPrice")
     totalPrice.innerHTML= totalPrix
-
 }
-
 
 async function envoyerPost (contact, arrayProducts){
 /**Fonction d'envoi du post API
  * @param {object} contact = objet contact 
  * @param {array} arrayProducts = tableau des ID produits
- * @return {object} = réponse de l'appel de l'API
+ * @return {text} = orderId issu de la réponse de l'API
 */
     const contactJSON = JSON.stringify(contact)
     const productsJSON = JSON.stringify(arrayProducts)
@@ -276,18 +292,12 @@ async function envoyerPost (contact, arrayProducts){
         },
         body: body
     })
-    console.log("reponseJSON ===================================")
-    console.log(reponseJSON)
     /** conversion de la réponse JSON en variables Javascript */
-    let reponse = await reponseJSON.json
-    console.log("reponse ===================================")
-    console.log (reponse)
+    let reponse = await reponseJSON.json ()
+    console.log("reponse.orderId = " + reponse.orderId)    
     /** return de la réponse */
-    return (reponse)
-
+    return reponse.orderId
 }
-
-        
 
 function modifQuantiteLS (id, color, quantity) {
 /** fonction modif quantité dans le local storage en utilisant la clé ID-COLOR.
@@ -305,7 +315,6 @@ function deleteArticleLS (id, color) {
  * @param {text} color = couleur du produit
 */
     window.localStorage.removeItem(id + "-" + color)
-
 }
 
 async function lireProduitAPI(id) {
@@ -315,7 +324,14 @@ async function lireProduitAPI(id) {
 */
     const reponse =  await fetch("http://localhost:3000/api/products/" + id)
     const produit =  await reponse.json()
-    return(produit)
-   
+    return produit
 }
 
+function logLocalStorage () {
+    /** affichage du local storage dans la console */
+        /** boucle sur les lignes du local storage */
+        for (var i = 0; i < localStorage.length; i++){
+            let keyLS = localStorage.key(i)
+            console.log (keyLS + "=" + localStorage.getItem(keyLS))
+        }
+    }
