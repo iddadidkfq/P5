@@ -1,12 +1,10 @@
 /** affichage du contenu du cart ================================================ 
- * stockage des id des articles dans arrayProducts pour futur appel de l'API qui
- *  aura besoin de l'objet contact et de l'array des id des produits du cart
 */
-    const arrayProducts = afficherCart ()
+    afficherCart ()
 
 /** affichage du prix total ===================================================== 
-*/
-    afficherPrixTotal () 
+*/ 
+    afficherPrixTotal ()
 
 /** saisie et controle du formulaire des infos client ============================
   les données saisies sont stockées dans l'objet contact
@@ -103,28 +101,45 @@
 /**Traitement du bouton commander ============================================= */
 
     /**récup du formulaire */
-    let form = document.querySelector (".cart__order__form")
+        let form = document.querySelector (".cart__order__form")
 
-    /** détection event submit sur formulaire (et non sur le bouton) */
-    form.addEventListener ("submit", async(event) => {
+        /** détection event submit sur formulaire (et non sur le bouton) */
+        form.addEventListener ("submit", async(event) => {
+            /**controle prix total */ 
+            let totalPrice = document.getElementById ("totalPrice")
+            console.log(Number(totalPrice.innerHTML))
+            if (Number(totalPrice.innerHTML) > 0) { 
+      
+                /**blocage de l'envoi du formulaire en HTML*/
+                event.preventDefault ()   
+                /** création tableau des ID produits commandés*/
+                const tableauProduit = []
+            
+                    /** boucle sur les articles du local storage */
+                    for (var i = 0; i < localStorage.length; i++){
+                        key=localStorage.key(i)
+                        /**spit de la key pour récupérer l'ID */
+                        const myArray = key.split("-")
+                        let id= myArray[0]
+                        /** stockage de l'ID dans le tableau des produits */
+                        tableauProduit[i]= id
+                    }    
+                    console.log(tableauProduit)
+            
+                /**on appelle l'API*/
+                let orderId = await envoyerPost (contact, tableauProduit) 
+                console.log (orderId)
+                /**lancement de la page confirmation de commande */
+                window.location.href = './confirmation.html?orderid=' + orderId
+            } else {
+                alert("Commande vide")
+            }
+        })    
  
-        /**blocage de l'envoi du formulaire en HTML*/
-        event.preventDefault ()
-
-        /**on appelle l'API*/
-        let orderId = await envoyerPost (contact, arrayProducts) 
-        console.log (orderId)
-        /**lancement de la page confirmation de commande */
-        window.location.href = 'confirmation.html?orderid=' + orderId
-
-    })
 
 function afficherCart () {
 /** affiche les divers articles du CART à partir du local storage
- * @return {array} = tableau des ID des produits du cart
 */
-    /** création tableau des ID produits */
-    const tableauProduit = []
 
     /** boucle sur les lignes du local storage */
     for (var i = 0; i < localStorage.length; i++){
@@ -139,17 +154,11 @@ function afficherCart () {
         /** lecture de la valeur associée à la key = quantité */
         let quantity= localStorage.getItem(key)
 
-        /** stockage de l'ID dans le tableau des produits */
-        tableauProduit[i]= id
         
         /** affichage de l'article */
         afficherArticle (id,color,quantity)
     }
 
-    console.log (tableauProduit)
-
-    /** récupération de la valeur tableauProduits*/
-    return tableauProduit
 }
 
 async function afficherArticle (id,color,quantity) {
@@ -202,23 +211,26 @@ async function afficherArticle (id,color,quantity) {
     divInputQuantity.setAttribute("type","number")
     divInputQuantity.classList.add("itemQuantity")
     divInputQuantity.name = "itemQuantity"
-    divInputQuantity.min = "1"
-    divInputQuantity.max = "100"
+    divInputQuantity.setAttribute("min","1")
+    divInputQuantity.setAttribute("max","100")
     divInputQuantity.value = quantity
     divQuantity.appendChild(divInputQuantity)
     
     /**ajout d'évènement modif quantité */
     divInputQuantity.addEventListener("change", function () {
         let quantity = Number(divInputQuantity.value)
-        let article = divInputQuantity.closest(".cart__item")
-        let id=article.getAttribute("data-id")       
-        let color=article.getAttribute("data-color")
-        /**  maj du local storage */
-        modifQuantiteLS (id, color, quantity) 
-        /** pour vérification */
-        logLocalStorage ()
-        /** maj total */
-        afficherPrixTotal ()
+        if (ctrlQuantite(quantity)) {
+            let article = divInputQuantity.closest(".cart__item")
+            let id=article.getAttribute("data-id")       
+            let color=article.getAttribute("data-color")
+            /**  maj du local storage */
+            modifQuantiteLS (id, color, quantity) 
+            /** pour vérification */
+            logLocalStorage ()
+            /** maj total */
+            afficherPrixTotal ()
+        }
+
     })
 
     /**création du div delete */
@@ -244,9 +256,9 @@ async function afficherArticle (id,color,quantity) {
 }
 
 async function afficherPrixTotal () {
-/** calcul prix total du CART - on lit les articles dans le local storage puis 
- * le prix via l'API
+/** calcul prix total du CART - on lit les articles dans le local storage puis le prix via l'API
 */
+ 
     let totalPrix = 0
     let totalArticle = 0
     /** boucle sur les articles du local storage */
@@ -279,6 +291,7 @@ async function envoyerPost (contact, arrayProducts){
  * @param {array} arrayProducts = tableau des ID produits
  * @return {text} = orderId issu de la réponse de l'API
 */
+
     const contactJSON = JSON.stringify(contact)
     const productsJSON = JSON.stringify(arrayProducts)
     let body = `{"contact":` + contactJSON + `, "products":` + productsJSON + `}`
@@ -287,8 +300,8 @@ async function envoyerPost (contact, arrayProducts){
     const reponseJSON = await fetch ('http://localhost:3000/api/products/order',{
         method: 'POST',
         headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
         },
         body: body
     })
@@ -297,6 +310,7 @@ async function envoyerPost (contact, arrayProducts){
     console.log("reponse.orderId = " + reponse.orderId)    
     /** return de la réponse */
     return reponse.orderId
+
 }
 
 function modifQuantiteLS (id, color, quantity) {
@@ -334,4 +348,33 @@ function logLocalStorage () {
             let keyLS = localStorage.key(i)
             console.log (keyLS + "=" + localStorage.getItem(keyLS))
         }
+    }
+
+function ctrlQuantite(valeur){
+    /** affiche une alerte si quantité saisie invalide 
+     * @param {text} valeur = quantité saisie à controler
+     * @return {boolean} = TRUE si quantité OK, FALSE sinon
+    */
+         /**regex saisie entre 1 et 100 
+        ^[1-9][0-9]?$|^100$
+        1st Alternative ^[1-9][0-9]?$
+            ^ asserts position at start of a line
+            Match a single character present in the list below [1-9]
+            Match a single character present in the list below [0-9]
+            ? matches the previous token between zero and one times
+            $ asserts position at the end of a line
+        2nd Alternative ^100$
+            ^ asserts position at start of a line
+            matches the characters 100 literally (case sensitive)
+            $ asserts position at the end of a line
+        */
+        let regex = new RegExp("^[1-9][0-9]?$|^100$")
+        if (regex.test(valeur)===false){
+            alert("La quantité " + valeur + " n'est pas valide")
+            return (false)
+        } else {
+            /** maj total */
+            afficherPrixTotal ()
+            return (true)
+        }   
     }

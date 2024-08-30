@@ -74,37 +74,45 @@ async function main() {
              * la quantité est la valeur associée à la clé
              */
             key = id + "-" + maCouleur
-            /** on regarde si l'article (id+couleur) existe déjà dans le local storage.
-             * Si OUI, on ajoute la nouvelle quantité à celle existante
-             */
-            let currentQuantity = Number(window.localStorage.getItem(key))
-            console.log (currentQuantity)
-            if (currentQuantity === null){
-                currentQuantity = maQuantité
-            } else {
-                currentQuantity = currentQuantity + maQuantite
-            }
             /** on écrit dans le local storage */
-            window.localStorage.setItem(key, currentQuantity)
+            window.localStorage.setItem(key, maQuantite)
             /** on affiche dans la console le contenu du local storage */
             logLocalStorage()
+     
+            /** retour à la page d'accueil */
+            window.location.href = './index.html'
         }
     })
 }   
 
 function ctrlQuantite(valeur){
-/** affiche une alerte si quantité saisie invalide 
- * @param {text} valeur = quantité saisie à controler
- * @return {boolean} = TRUE si quantité OK, FALSE sinon
-*/
-    let regex = new RegExp("^[1-9][0-9]?$")
-    if (regex.test(valeur)===false){
-        alert("La quantité " + valeur + " n'est pas valide")
-        return (false)
-    } else {
-        return (true)
-    }   
-}
+    /** affiche une alerte si quantité saisie invalide 
+     * @param {text} valeur = quantité saisie à controler
+     * @return {boolean} = TRUE si quantité OK, FALSE sinon
+    */
+         /**regex saisie entre 1 et 100 
+        ^[1-9][0-9]?$|^100$
+        1st Alternative ^[1-9][0-9]?$
+            ^ asserts position at start of a line
+            Match a single character present in the list below [1-9]
+            Match a single character present in the list below [0-9]
+            ? matches the previous token between zero and one times
+            $ asserts position at the end of a line
+        2nd Alternative ^100$
+            ^ asserts position at start of a line
+            matches the characters 100 literally (case sensitive)
+            $ asserts position at the end of a line
+        */
+        let regex = new RegExp("^[1-9][0-9]?$|^100$")
+        if (regex.test(valeur)===false){
+            alert("La quantité " + valeur + " n'est pas valide")
+            return (false)
+        } else {
+            /** maj total */
+            afficherPrixTotal ()
+            return (true)
+        }   
+    }
 
 function ctrlCouleur(valeur){
 /** affiche une alerte si une couleur a été sélectionnée 
