@@ -9,9 +9,9 @@ async function main() {
 /** Fonction principale de index.html - 
  * mis en fonction pour pouvoir être en await sur lireTousProduitsAPI()
  */
-    /** chargement du tableau des produits via l'API */
+    /** (1) chargement du tableau des produits via l'API */
     const products = await lireTousProduitsAPI()
-    /** boucle d'affichage des produits */
+    /** (2) boucle d'affichage des produits */
     for (let i = 0; i < products.length; i++) {
         afficherProduit(products[i])
     }
@@ -34,7 +34,7 @@ function afficherProduit (produit){
 /** affichage d'un produit
  * @param {object} produit = objet produit à afficher
 */
-    /** création balise <a> avec ID produit dans l'URL*/
+    /** (3) création balise <a> avec ID produit dans l'URL*/
     const baliseA = document.createElement("a");
     baliseA.href="./product.html?id=" + produit._id
     const sectionItems = document.getElementById("items")

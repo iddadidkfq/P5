@@ -1,14 +1,126 @@
-/** affichage du contenu du cart ================================================ 
-*/
-    afficherCart ()
+/** on crée une fonction main pour la lecture asynchrone via l'API */
+main()
 
-/** affichage du prix total ===================================================== 
-*/ 
+async function main() {
+/**
+ * Fonction principale de product.html - 
+ * mis en fonction pour pouvoir être en async sur lireProduitAPI()
+ */
+
+
+/** (A) affichage du contenu du cart ================================================ 
+*/
+    
+    /** (A1) boucle sur les lignes du local storage */
+    for (var i = 0; i < localStorage.length; i++){
+        /** lecture de la key du produit dans le local storage. La key = ID+color */
+        key=localStorage.key(i)
+
+        /**spit de la key pour récupérer l'ID & la Color*/
+        const myArray = key.split("-")
+        let id= myArray[0]
+        let color= myArray [1]
+
+        /** lecture de la valeur associée à la key = quantité */
+        let quantity= localStorage.getItem(key)
+        /** (A2) lecture des infos du produit par l'API - en asynchrone*/
+        const produit= await lireProduitAPI(id)
+
+        /** (A3) Gestion du DOM */
+
+            /** création de baliste article */    
+            const article = document.createElement("article");
+            article.classList.add("cart__item")
+            article.setAttribute ("data-id",id)
+            article.setAttribute ("data-color",color)
+            const section = document.getElementById ("cart__items")
+            section.appendChild (article)
+
+            /** création du div pour img */  
+            const divImg = document.createElement("div")
+            divImg.classList.add("cart__item__img")
+            divImg.innerHTML = `<img src="` + produit.imageUrl +`" alt="` + produit.altTxt+ `">`
+            article.appendChild(divImg)
+
+            /** création du div content */
+            const divContent = document.createElement("div")
+            divContent.classList.add("cart__item__content")
+            article.appendChild(divContent)
+
+            /**création du div description (name + color + prix) */
+            const divDescription = document.createElement("div")
+            divDescription.classList.add("cart__item__content__description")
+            divDescription.innerHTML = `<h2>` + produit.name + `</h2>` + `<p>` + color + `</p>` + `<p>` + produit.price + ` €</p>`
+            divContent.appendChild(divDescription)
+
+            /**création du div settings */
+            const divSettings = document.createElement("div")
+            divSettings.classList.add("cart__item__content__settings")
+            divContent.appendChild(divSettings)
+
+            /**création du div quantity */
+            const divQuantity = document.createElement("div")
+            divQuantity.classList.add("cart__item__content__settings__quantity")
+            divQuantity.innerHTML = `<p>Qté : </p>`
+            divSettings.appendChild(divQuantity)
+
+            /**création du input quantity */
+            const divInputQuantity = document.createElement("input")
+            divInputQuantity.setAttribute("type","number")
+            divInputQuantity.classList.add("itemQuantity")
+            divInputQuantity.name = "itemQuantity"
+            divInputQuantity.setAttribute("min","1")
+            divInputQuantity.setAttribute("max","100")
+            divInputQuantity.value = quantity
+            divQuantity.appendChild(divInputQuantity)
+            
+            /**ajout d'évènement modif quantité */
+            divInputQuantity.addEventListener("change", function () {
+                let quantity = Number(divInputQuantity.value)
+                if (ctrlQuantite(quantity)) {
+                    let article = divInputQuantity.closest(".cart__item")
+                    let id=article.getAttribute("data-id")       
+                    let color=article.getAttribute("data-color")
+                    /**  maj du local storage */
+                    modifQuantiteLS (id, color, quantity) 
+                    /** pour vérification */
+                    logLocalStorage ()
+                    /** maj total */
+                    afficherPrixTotal ()
+                }
+
+            })
+
+            /**création du div delete */
+            const divDelete = document.createElement("div")
+            divDelete.classList.add("cart__item__content__settings__delete")
+            divDelete.innerHTML = `<p class="deleteItem">Supprimer</p>`
+            divSettings.appendChild(divDelete)
+
+            /**ajout d'évènement clic delete - supprime le produit du cart*/
+            divDelete.addEventListener("click", function () {
+                let article = divDelete.closest(".cart__item")
+                let id=article.getAttribute("data-id")       
+                let color=article.getAttribute("data-color")
+                /** suppression de l'article dans le local storage */
+                deleteArticleLS (id, color)
+                /** suppression de toute la balise article dans le DOM */
+                article.remove()
+                /** pour vérification */
+                logLocalStorage ()
+                /** maj total */
+                afficherPrixTotal ()
+            })
+    }
+        
+
+    /** (B) calcul & affichage du prix total ===================================================== 
+    */ 
     afficherPrixTotal ()
 
-/** saisie et controle du formulaire des infos client ============================
-  les données saisies sont stockées dans l'objet contact
-*/
+    /** (C) saisie et controle du formulaire des infos client ============================
+     les données saisies sont stockées dans l'objet contact
+    */
     let contact = {}
 
     /**balise first name - controle sur event change*/
@@ -37,7 +149,7 @@
         contact.lastName = lastName.value
 
         /**regex saisie last name */
-        let regex = new RegExp ("^([a-zA-Z '-]+)$")
+        let regex = new RegExp ("^([a-zA-ZÀ-ÿ' -]+)$")
         let lastNameErrorMsg = document.getElementById ("lastNameErrorMsg")
         if (regex.test (contact.lastName)===false) {
             lastNameErrorMsg.innerHTML = "Caractère non valide"
@@ -98,68 +210,45 @@
         }
     })
 
-/**Traitement du bouton commander ============================================= */
+    /** (D) Traitement du bouton commander ============================================= */
 
     /**récup du formulaire */
-        let form = document.querySelector (".cart__order__form")
+    let form = document.querySelector (".cart__order__form")
 
-        /** détection event submit sur formulaire (et non sur le bouton) */
-        form.addEventListener ("submit", async(event) => {
-            /**controle prix total */ 
-            let totalPrice = document.getElementById ("totalPrice")
-            console.log(Number(totalPrice.innerHTML))
-            if (Number(totalPrice.innerHTML) > 0) { 
-      
-                /**blocage de l'envoi du formulaire en HTML*/
-                event.preventDefault ()   
-                /** création tableau des ID produits commandés*/
-                const tableauProduit = []
-            
-                    /** boucle sur les articles du local storage */
-                    for (var i = 0; i < localStorage.length; i++){
-                        key=localStorage.key(i)
-                        /**spit de la key pour récupérer l'ID */
-                        const myArray = key.split("-")
-                        let id= myArray[0]
-                        /** stockage de l'ID dans le tableau des produits */
-                        tableauProduit[i]= id
-                    }    
-                    console.log(tableauProduit)
-            
-                /**on appelle l'API*/
-                let orderId = await envoyerPost (contact, tableauProduit) 
-                console.log (orderId)
-                /**lancement de la page confirmation de commande */
-                window.location.href = './confirmation.html?orderid=' + orderId
-            } else {
-                alert("Commande vide")
-            }
-        })    
- 
+    /** détection event submit sur formulaire (et non sur le bouton) */
+    form.addEventListener ("submit", async(event) => {
+        /**controle prix total non nul*/ 
+        let totalPrice = document.getElementById ("totalPrice")
+        console.log(Number(totalPrice.innerHTML))
+        if (Number(totalPrice.innerHTML) > 0) { 
 
-function afficherCart () {
-/** affiche les divers articles du CART à partir du local storage
-*/
-
-    /** boucle sur les lignes du local storage */
-    for (var i = 0; i < localStorage.length; i++){
-        /** lecture de la key du produit dans le local storage. La key = ID+color */
-        key=localStorage.key(i)
-
-        /**spit de la key pour récupérer l'ID & la Color*/
-        const myArray = key.split("-")
-        let id= myArray[0]
-        let color= myArray [1]
-
-        /** lecture de la valeur associée à la key = quantité */
-        let quantity= localStorage.getItem(key)
-
+            /**blocage de l'envoi du formulaire en HTML*/
+            event.preventDefault ()   
+            /** création tableau des ID produits commandés*/
+            const tableauProduit = []
         
-        /** affichage de l'article */
-        afficherArticle (id,color,quantity)
-    }
+                /** boucle sur les articles du local storage */
+                for (var i = 0; i < localStorage.length; i++){
+                    key=localStorage.key(i)
+                    /**spit de la key pour récupérer l'ID */
+                    const myArray = key.split("-")
+                    let id= myArray[0]
+                    /** stockage de l'ID dans le tableau des produits */
+                    tableauProduit[i]= id
+                }    
+                console.log(tableauProduit)
+        
+            /** (D1) on appelle l'API*/
+            let orderId = await envoyerPost (contact, tableauProduit) 
+            console.log (orderId)
+            /** (D2) lancement de la page confirmation de commande */
+            window.location.href = './confirmation.html?orderid=' + orderId
+        } else {
+            alert("Commande vide")
+        }
+    })    
+}    
 
-}
 
 async function afficherArticle (id,color,quantity) {
 /** fonction d'affichage d'un article du cart
@@ -167,92 +256,7 @@ async function afficherArticle (id,color,quantity) {
  * @param {text} color = couleur du produit
  * @param {text} quantity = quantité du produit
  */
-    /** lecture des infos du produit par l'API - en asynchrone*/
-    const produit= await lireProduitAPI(id)
 
-    /** création de baliste article */    
-    const article = document.createElement("article");
-    article.classList.add("cart__item")
-    article.setAttribute ("data-id",id)
-    article.setAttribute ("data-color",color)
-    const section = document.getElementById ("cart__items")
-    section.appendChild (article)
-
-    /** création du div pour img */  
-    const divImg = document.createElement("div")
-    divImg.classList.add("cart__item__img")
-    divImg.innerHTML = `<img src="` + produit.imageUrl +`" alt="` + produit.altTxt+ `">`
-    article.appendChild(divImg)
-
-    /** création du div content */
-    const divContent = document.createElement("div")
-    divContent.classList.add("cart__item__content")
-    article.appendChild(divContent)
-
-    /**création du div description (name + color + prix) */
-    const divDescription = document.createElement("div")
-    divDescription.classList.add("cart__item__content__description")
-    divDescription.innerHTML = `<h2>` + produit.name + `</h2>` + `<p>` + color + `</p>` + `<p>` + produit.price + ` €</p>`
-    divContent.appendChild(divDescription)
-
-    /**création du div settings */
-    const divSettings = document.createElement("div")
-    divSettings.classList.add("cart__item__content__settings")
-    divContent.appendChild(divSettings)
-
-    /**création du div quantity */
-    const divQuantity = document.createElement("div")
-    divQuantity.classList.add("cart__item__content__settings__quantity")
-    divQuantity.innerHTML = `<p>Qté : </p>`
-    divSettings.appendChild(divQuantity)
-
-    /**création du input quantity */
-    const divInputQuantity = document.createElement("input")
-    divInputQuantity.setAttribute("type","number")
-    divInputQuantity.classList.add("itemQuantity")
-    divInputQuantity.name = "itemQuantity"
-    divInputQuantity.setAttribute("min","1")
-    divInputQuantity.setAttribute("max","100")
-    divInputQuantity.value = quantity
-    divQuantity.appendChild(divInputQuantity)
-    
-    /**ajout d'évènement modif quantité */
-    divInputQuantity.addEventListener("change", function () {
-        let quantity = Number(divInputQuantity.value)
-        if (ctrlQuantite(quantity)) {
-            let article = divInputQuantity.closest(".cart__item")
-            let id=article.getAttribute("data-id")       
-            let color=article.getAttribute("data-color")
-            /**  maj du local storage */
-            modifQuantiteLS (id, color, quantity) 
-            /** pour vérification */
-            logLocalStorage ()
-            /** maj total */
-            afficherPrixTotal ()
-        }
-
-    })
-
-    /**création du div delete */
-    const divDelete = document.createElement("div")
-    divDelete.classList.add("cart__item__content__settings__delete")
-    divDelete.innerHTML = `<p class="deleteItem">Supprimer</p>`
-    divSettings.appendChild(divDelete)
-
-    /**ajout d'évènement clic delete - supprime le produit du cart*/
-    divDelete.addEventListener("click", function () {
-        let article = divDelete.closest(".cart__item")
-        let id=article.getAttribute("data-id")       
-        let color=article.getAttribute("data-color")
-        /** suppression de l'article dans le local storage */
-        deleteArticleLS (id, color)
-        /** suppression de toute la balise article dans le DOM */
-        article.remove()
-        /** pour vérification */
-        logLocalStorage ()
-        /** maj total */
-        afficherPrixTotal ()
-    })
 }
 
 async function afficherPrixTotal () {
@@ -261,28 +265,29 @@ async function afficherPrixTotal () {
  
     let totalPrix = 0
     let totalArticle = 0
-    /** boucle sur les articles du local storage */
+    /** (B1) boucle sur les articles du local storage */
     for (var i = 0; i < localStorage.length; i++){
-        key=localStorage.key(i)
+        let key=localStorage.key(i)
         /**spit de la key pour récupérer l'ID */
         const myArray = key.split("-")
         let id= myArray[0]
         let quantity= localStorage.getItem(key)
-        /** lecture des infos produit via l'API */
+        /** (B2) lecture des infos produit via l'API */
         const produit= await lireProduitAPI(id)
         /**calcul nombre total d'articles */
         totalArticle= totalArticle+ Number(quantity)
         /**calcul prix total */
         totalPrix= totalPrix + Number(quantity) * produit.price 
     }    
+    /** (B3) Affichage dans le DOM */
 
-    /**affichage nombre total d'articles */
-    let totalQuantity = document.getElementById ("totalQuantity")
-    totalQuantity.innerHTML= totalArticle
-    
-    /**affichage prix total */ 
-    let totalPrice = document.getElementById ("totalPrice")
-    totalPrice.innerHTML= totalPrix
+        /**affichage nombre total d'articles */
+        let totalQuantity = document.getElementById ("totalQuantity")
+        totalQuantity.innerHTML= totalArticle
+        
+        /**affichage prix total */ 
+        let totalPrice = document.getElementById ("totalPrice")
+        totalPrice.innerHTML= totalPrix
 }
 
 async function envoyerPost (contact, arrayProducts){

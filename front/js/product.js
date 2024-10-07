@@ -3,67 +3,69 @@ main()
 
 async function main() {
 /**
- * Fonction principale de index.html - 
+ * Fonction principale de product.html - 
  * mis en fonction pour pouvoir être en async sur lireProduitAPI()
  */
 
-    /**recuperation product ID vie l'URL */
+    /** (1) recuperation product ID vie l'URL */
     const url = new URL(window.location.href);
     const id = url.searchParams.get("id");
 
+    /** (2) lecture du produit*/
     const product= await lireProduitAPI(id)
     console.log (product)
 
+    /** (3) interaction utilisateur via le DOM */
 
-    /** création image & alt ==================================*/
-    const nomImg = document.createElement("img");
-    nomImg.src = product.imageUrl
-    nomImg.alt = product.altTxt
-    /** intégration dans le DOM */
-    const parentImg = document.querySelector(".item__img");
-    parentImg.appendChild(nomImg);
+        /** création image & alt ==================================*/
+        const nomImg = document.createElement("img");
+        nomImg.src = product.imageUrl
+        nomImg.alt = product.altTxt
+        /** intégration dans le DOM */
+        const parentImg = document.querySelector(".item__img");
+        parentImg.appendChild(nomImg);
 
 
-    /**  MAJ du titre, prix & description ===================== */
-    const baliseH1 = document.getElementById("title")
-    baliseH1.innerText = product.name
+        /**  MAJ du titre, prix & description ===================== */
+        const baliseH1 = document.getElementById("title")
+        baliseH1.innerText = product.name
 
-    const balisePrix = document.getElementById("price")
-    balisePrix.innerText = product.price
+        const balisePrix = document.getElementById("price")
+        balisePrix.innerText = product.price
 
-    const baliseDesc = document.getElementById("description")
-    baliseDesc.innerText = product.description
+        const baliseDesc = document.getElementById("description")
+        baliseDesc.innerText = product.description
 
-    /** MAJ couleurs ========================================== */
-    let myColors = product.colors
-    let choixCouleur = document.getElementById ("colors")
-    /** boucle sur les couleurs pour initialiser la liste des options couleurs 
-     * on crée une balise option par couleur possible
-    */
-    for (let i = 0; i < myColors.length; i++) {
-        const baliseOption = document.createElement("option");
-        baliseOption.value= myColors[i]
-        baliseOption.innerText = myColors[i]
-        choixCouleur.appendChild(baliseOption)
-    }
-    /** récupération de la couleur sélectionnée - event change */
-    let maCouleur="" 
-    choixCouleur.addEventListener("change", function () {
-        maCouleur = choixCouleur.options[choixCouleur.selectedIndex].text;
-        console.log(maCouleur)
-    })
+        /** MAJ couleurs ========================================== */
+        let myColors = product.colors
+        let choixCouleur = document.getElementById ("colors")
+        /** boucle sur les couleurs pour initialiser la liste des options couleurs 
+         * on crée une balise option par couleur possible
+        */
+        for (let i = 0; i < myColors.length; i++) {
+            const baliseOption = document.createElement("option");
+            baliseOption.value= myColors[i]
+            baliseOption.innerText = myColors[i]
+            choixCouleur.appendChild(baliseOption)
+        }
+        /** récupération de la couleur sélectionnée - event change */
+        let maCouleur="" 
+        choixCouleur.addEventListener("change", function () {
+            maCouleur = choixCouleur.options[choixCouleur.selectedIndex].text;
+            console.log(maCouleur)
+        })
 
-    /**MAJ Quantité - initialisé à 1 ==================================== */
-    let maQuantite=1
-    let choixQuantite=document.getElementById ("quantity")
-    choixQuantite.value=1
-    /** récupération de la quantité saisie - event change */
-    choixQuantite.addEventListener("change", function () {
-        maQuantite = Number(choixQuantite.value);
-        console.log(maQuantite)
-    })
-    
-    /**Clic bouton panier - event click ================================== */
+        /**MAJ Quantité - initialisé à 1 ==================================== */
+        let maQuantite=1
+        let choixQuantite=document.getElementById ("quantity")
+        choixQuantite.value=1
+        /** récupération de la quantité saisie - event change */
+        choixQuantite.addEventListener("change", function () {
+            maQuantite = Number(choixQuantite.value);
+            console.log(maQuantite)
+        })
+        
+    /** (4) Clic bouton panier - event click ================================== */
     let monBouton = document.getElementById("addToCart")
     monBouton.addEventListener("click",function () {
         /** on teste si la quantité et la couleur sont ok */
@@ -108,8 +110,6 @@ function ctrlQuantite(valeur){
             alert("La quantité " + valeur + " n'est pas valide")
             return (false)
         } else {
-            /** maj total */
-            afficherPrixTotal ()
             return (true)
         }   
     }
